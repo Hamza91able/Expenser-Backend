@@ -19,6 +19,7 @@ fastify.register(AutoLoad, {
   dir: path.join(__dirname, "routes"),
 });
 
+console.log(process.env)
 fastify.listen(process.env.PORT, process.env.HOSTNAME, function (err, address) {
   if (err) {
     fastify.log.error(err);
