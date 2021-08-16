@@ -8,7 +8,7 @@ const connectDB = require("./config/db");
 
 const fastify = require("fastify")({
   logger: true,
-  https2: true,
+  trustProxy: true
 });
 
 fastify.register(AutoLoad, {
