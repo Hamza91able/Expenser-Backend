@@ -13,6 +13,7 @@ exports.getCurrentMonthsExpense = async (req, res) => {
         $match: {
           user: mongo.ObjectId(req.user.userId),
           createdAt: { $gt: month_start, $lt: month_end },
+          ledger_type: "Debit",
         },
       },
       {
@@ -39,6 +40,7 @@ exports.getTodaysExpense = async (req, res) => {
         $match: {
           user: mongo.ObjectId(req.user.userId),
           createdAt: { $gt: day_start, $lt: day_end },
+          ledger_type: "Debit",
         },
       },
       {
@@ -62,9 +64,15 @@ exports.getAvgExpense = async (req, res) => {
     const arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     const query = [
       {
+        $match: {
+          user: mongo.ObjectId(req.user.userId),
+          ledger_type: "Debit",
+        },
+      },
+      {
         $addFields: {
           date: {
-            $month: "$createdAt",
+            $month: "$date",
           },
         },
       },
@@ -105,6 +113,71 @@ exports.getAvgExpense = async (req, res) => {
       short: (user.goal - money).toFixed(1),
     });
   } catch (err) {
+    res.code(500).send({
+      message: err.toString(),
+    });
+  }
+};
+
+exports.getAvgIncome = async (req, res) => {
+  try {
+    const arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const query = [
+      {
+        $match: {
+          user: mongo.ObjectId(req.user.userId),
+        },
+      },
+      {
+        $addFields: {
+          date: {
+            $month: "$date",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$date",
+          credit: {
+            $sum: {
+              $cond: [{ $eq: ["$ledger_type", "Credit"] }, "$price", 0],
+            },
+          },
+          debit: {
+            $sum: {
+              $cond: [{ $eq: ["$ledger_type", "Debit"] }, "$price", 0],
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          month: "$_id",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: 1,
+          debit: 1,
+          credit: 1,
+        },
+      },
+    ];
+    const data = await Ledger.aggregate(query);
+    console.log(data);
+    data.forEach((data) => {
+      if (data)
+        arr[data.month - 1] = {
+          debit: data.debit,
+          credit: data.credit,
+        };
+    });
+    await res.code(200).send({
+      arr,
+    });
+  } catch (err) {
+    console.log(err);
     res.code(500).send({
       message: err.toString(),
     });

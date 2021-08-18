@@ -4,6 +4,7 @@ const {
   getCurrentMonthsExpense,
   getTodaysExpense,
   getAvgExpense,
+  getAvgIncome,
 } = require("../../../../controllers/home");
 
 module.exports = async function (fastify, opts) {
@@ -21,5 +22,10 @@ module.exports = async function (fastify, opts) {
     "/avg-expense",
     { preHandler: [fastify.authenticate] },
     getAvgExpense
+  );
+  fastify.get(
+    "/avg-dual",
+    { preHandler: [fastify.authenticate] },
+    getAvgIncome
   );
 };
