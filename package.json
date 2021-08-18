@@ -32,8 +32,7 @@
     "mongoose": "^5.13.5",
     "mongoose-paginate-v2": "^1.4.1",
     "nodemailer": "^6.6.3",
-    "nodemon": "^2.0.12",
-    "public-ip": "^4.0.4"
+    "nodemon": "^2.0.12"
   },
   "devDependencies": {
     "tap": "^15.0.9"
