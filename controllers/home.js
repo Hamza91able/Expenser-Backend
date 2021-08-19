@@ -12,7 +12,7 @@ exports.getCurrentMonthsExpense = async (req, res) => {
       {
         $match: {
           user: mongo.ObjectId(req.user.userId),
-          createdAt: { $gt: month_start, $lt: month_end },
+          date: { $gt: month_start, $lt: month_end },
           ledger_type: "Debit",
         },
       },
@@ -39,7 +39,7 @@ exports.getTodaysExpense = async (req, res) => {
       {
         $match: {
           user: mongo.ObjectId(req.user.userId),
-          createdAt: { $gt: day_start, $lt: day_end },
+          date: { $gt: day_start, $lt: day_end },
           ledger_type: "Debit",
         },
       },
@@ -165,7 +165,6 @@ exports.getAvgIncome = async (req, res) => {
       },
     ];
     const data = await Ledger.aggregate(query);
-    console.log(data);
     data.forEach((data) => {
       if (data)
         arr[data.month - 1] = {
