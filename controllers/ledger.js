@@ -7,11 +7,10 @@ exports.addLedger = async (req, res) => {
   let id, balance;
   try {
     const { name, price, date, note, type, remove } = req.body;
-    console.log(date)
     const ledger = new Ledger({
       name,
       price,
-      date,
+      date: new Date(date),
       note,
       ledger_type: type,
       user: req.user.userId,
