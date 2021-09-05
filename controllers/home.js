@@ -95,8 +95,9 @@ exports.getAvgExpense = async (req, res) => {
         },
       },
     ];
+    let counter = 0;
     const data = await Ledger.aggregate(query);
-    const avg = data[0].count / 12;
+    let avg = 0;
     const month = new Date().getMonth() + 1;
     const remaining_months = 12 - month;
     const money = user.salary * remaining_months - avg * remaining_months;
@@ -105,7 +106,12 @@ exports.getAvgExpense = async (req, res) => {
     else is_achivable = false;
     data.forEach((data) => {
       if (data) arr[data.month - 1] = data.count;
+      if (data.count > 0) {
+        avg = avg + data.count;
+        counter += 1;
+      }
     });
+    avg = avg / counter;
     await res.code(200).send({
       arr,
       avg: avg.toFixed(1),
@@ -174,6 +180,51 @@ exports.getAvgIncome = async (req, res) => {
     });
     await res.code(200).send({
       arr,
+    });
+  } catch (err) {
+    console.log(err);
+    res.code(500).send({
+      message: err.toString(),
+    });
+  }
+};
+
+exports.dailyExpense = async (req, res) => {
+  try {
+    const start_date = moment(new Date())
+      .startOf("month")
+      .startOf("day")
+      .toDate();
+    const end_date = moment(new Date()).endOf("month").endOf("day").toDate();
+    const days = Math.ceil((end_date - start_date) / (1000 * 60 * 60 * 24));
+    const days_arr = [];
+
+    for (let i = 0; i <= days; i++) days_arr.push(i + 1);
+
+    const expenseCount = await Ledger.aggregate([
+      {
+        $match: {
+          user: mongo.ObjectId(req.user.userId),
+          ledger_type: "Debit",
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $add: [
+              { $dayOfYear: "$date" },
+              { $multiply: [400, { $year: "$date" }] },
+            ],
+          },
+          price: { $sum: "$price" },
+          first: { $min: "$date" },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+
+    await res.code(200).send({
+      expenseCount: expenseCount.reverse(),
     });
   } catch (err) {
     console.log(err);
