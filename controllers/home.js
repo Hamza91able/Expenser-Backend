@@ -191,21 +191,21 @@ exports.getAvgIncome = async (req, res) => {
 
 exports.dailyExpense = async (req, res) => {
   try {
-    const start_date = moment(new Date())
-      .startOf("month")
-      .startOf("day")
-      .toDate();
-    const end_date = moment(new Date()).endOf("month").endOf("day").toDate();
-    const days = Math.ceil((end_date - start_date) / (1000 * 60 * 60 * 24));
-    const days_arr = [];
-
-    for (let i = 0; i <= days; i++) days_arr.push(i + 1);
+    const { month } = req.query;
+    const date = month
+      ? new Date().setMonth(month)
+      : new Date(new Date().setMonth(0));
+    const month_start = moment(date).startOf("month").toDate();
+    const month_end = month
+      ? moment(date).endOf("month").toDate()
+      : moment(new Date()).endOf("month").toDate();
 
     const expenseCount = await Ledger.aggregate([
       {
         $match: {
           user: mongo.ObjectId(req.user.userId),
           ledger_type: "Debit",
+          date: { $gt: month_start, $lt: month_end },
         },
       },
       {
